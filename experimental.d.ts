@@ -39,12 +39,34 @@ import {ExecutionContext, ImplementationResult, MetaInterface} from '.';
 export type Implementation<Context = unknown> = (t: ExecutionContext<Context>) => ImplementationResult;
 export type ImplementationWithArgs<Args extends any[], Context = unknown> = (t: ExecutionContext<Context>, ...args: Args) => ImplementationResult;
 
+export type Macro<Args extends any[] = [], Context = unknown> = {
+	exec (t: ExecutionContext<Context>, ...args: Args): ImplementationResult;
+	title? (providedTitle?: string, ...args: Args): string;
+};
+
+export interface MacroInterface<InheritedContext = unknown> {
+	<Args extends any[] = [], Context = InheritedContext> (implementation: ImplementationWithArgs<Args, Context>): Macro<Args, Context>;
+	<Args extends any[] = [], Context = InheritedContext> (macro: Macro<Args, Context>): Macro<Args, Context>;
+}
+
 export interface TestInterface<Context = unknown> {
 	/** Declare a concurrent test. */
 	(title: string, implementation: Implementation<Context>): void;
 
 	/** Declare a concurrent test. */
 	<Args extends any[]> (title: string, implementation: ImplementationWithArgs<Args, Context>, ...args: Args): void;
+
+	/** Declare a concurrent test. */
+	(title: string, macro: Macro<[], Context>): void;
+
+	/** Declare a concurrent test. */
+	<Args extends any[]> (title: string, macro: Macro<Args, Context>, ...args: Args): void;
+
+	/** Declare a concurrent test. */
+	(macro: Macro<[], Context>): void;
+
+	/** Declare a concurrent test. */
+	<Args extends any[]> (macro: Macro<Args, Context>, ...args: Args): void;
 
 	/** Declare a hook that is run once, after all tests have passed. */
 	after: AfterInterface<Context>;
@@ -57,6 +79,9 @@ export interface TestInterface<Context = unknown> {
 
 	/** Declare a hook that is run before each test. */
 	beforeEach: BeforeInterface<Context>;
+
+	/** Create a macro you can reuse in multiple tests. */
+	macro: MacroInterface<Context>;
 
 	/** Declare a test that is expected to fail. */
 	failing: FailingInterface<Context>;
@@ -161,6 +186,18 @@ export interface SerialInterface<Context = unknown> {
 	/** Declare a serial test. */
 	<Args extends any[]> (title: string, implementation: ImplementationWithArgs<Args, Context>, ...args: Args): void;
 
+	/** Declare a serial test. */
+	(title: string, macro: Macro<[], Context>): void;
+
+	/** Declare a serial test. */
+	<Args extends any[]> (title: string, macro: Macro<Args, Context>, ...args: Args): void;
+
+	/** Declare a serial test. */
+	(macro: Macro<[], Context>): void;
+
+	/** Declare a serial test. */
+	<Args extends any[]> (macro: Macro<Args, Context>, ...args: Args): void;
+
 	/** Declare a serial hook that is run once, after all tests have passed. */
 	after: AfterInterface<Context>;
 
@@ -172,6 +209,9 @@ export interface SerialInterface<Context = unknown> {
 
 	/** Declare a serial hook that is run before each test. */
 	beforeEach: BeforeInterface<Context>;
+
+	/** Create a macro you can reuse in multiple tests. */
+	macro: MacroInterface<Context>;
 
 	/** Declare a serial test that is expected to fail. */
 	failing: FailingInterface<Context>;
